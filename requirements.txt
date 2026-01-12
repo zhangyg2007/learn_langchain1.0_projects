@@ -1,28 +1,76 @@
-# Core LangChain packages
-langchain==0.1.0
-langchain-community==0.0.10
-langchain-openai==0.0.2
+# Core LangChain packages (Chinese Models Support)
+langchain>=0.1.0
+langchain-community>=0.0.10
+langchain-openai>=0.0.2
+langchain-deepseek>=0.1.0
+langchain-glm>=0.1.0
 
-# LLM providers
+# Chinese LLM providers
+deepseek-api>=0.3.0
+tongyi>=0.3.0  # 通义千问
+zhipuai>=2.0.0  # 智谱GLM
+moonshot>=1.0  # 月之暗面Kimi
+baichuan>=1.0  # 百川智能
+dashscope>=1.0  # 阿里灵积
+
+# International LLM providers
 openai>=1.0.0
-google-generativeai
-ollama
+google-generativeai>=0.3.0
+ollama>=0.1.0
+anthropic>=0.7.0
 
-# Vector stores and databases
-chromadb>=0.4.0
-faiss-cpu
-pinecone-client
+# AI Workflow Integration
+zapier-langchain>=0.1.0
+make-com-langchain>=0.1.0
 
-# Document processing
-pypdf
-python-docx
-beautifulsoup4
-selenium
+# API Gateway support
+httpx>=0.25.0
+aiohttp>=3.9.0
 
-# Web frameworks
-fastapi
-flask
-streamlit
+# Vector stores and databases (Chinese-friendly)
+qdrant-client>=1.7.0        # Qdrant向量数据库
+milvus-client>=2.3.0         # 国内友好的Milvus星环向量数据库
+chroma-client>=0.4.0         # ChromaDB中文支持版
+pgvector>=0.2.0              # PostgreSQL向量插件
+weaviate-client>=3.25.0     # Weaviate支持中文
+kdbai>=1.0                   # KDB.AI时序向量数据库
+faiss-cpu>=1.7.0             # Facebook FAISS
+pinecone-client>=2.2.0       # Pinecone
+
+# Document processing (Multi-language support)
+pymupdf>=1.23.0              # 支持中文PDF解析
+python-docx>=0.8.11          # Word文档处理
+beautifulsoup4>=4.12.0       # HTML解析
+scrapy>=2.11.0               # 强大的中文网页爬虫
+jieba>=0.42.1                # 中文分词器
+spacy>=3.7.0                 # NLP处理
+langdetect>=1.0.9            # 语言检测
+unstructured[pdf,docx,pptx]>=0.11.0  # 多格式文档解析
+
+# Web frameworks and API support
+fastapi>=0.104.0               # 高性能API框架
+flask>=3.0.0                   # 轻量级Web框架
+streamlit>=1.28.0              # 数据应用框架
+gradio>=4.0.0                  # ML模型演示界面
+chainlit>=0.7.0                 # AI对话应用框架
+
+# AI Workflow Integration (Docker-ready)
+n8n-nodes>=0.1.0                # n8n工作流节点
+firecrawl-py>=0.8.0             # Firecrawl API
+jina>=3.23.0                   # 神经搜索框架
+haystack-ai>=2.0.0              # deepset的Haystack
+hayhooks>=0.1.0                 # Haystack Hooks
+vellum-client>=0.5.0            # Vellum工作流
+langflow>=0.6.0                 # LangFlow可视化工作流
+flowise>=1.4.0                   # Flowise低代码LLM平台
+
+# Dify Integration
+dify-client>=0.1.0               # Dify API客户端
+dify-sdk>=0.1.0                   # Dify SDK
+
+# RAGFlow Integration
+ragflow-client>=0.1.0             # RAGFlow客户端
+llamaflow>=0.1.0                  # LLamaIndex工作流
 
 # Development tools
 jupyter
