@@ -281,27 +281,78 @@ spec:
             port: 8000
 ```
 
-## 🎯 新学习目标
+## 🎯 分层学习体系
 
-完成本项目后，你将能够：
+### 🔰 **基础级 (Foundation 6周)** - 零基础友好
+**【保留1.0核心】LangChain生态筑基 + 简单Agent开发**
+- ✅ Week1-2: 环境搭建 → 第一条链 → Prompt工程
+- ✅ Week3-4: Agents概念 → 工具集成 → 对话机器人
+- ✅ Week5-6: RAG基础 → 向量数据库 → 问答系统
 
-### 🧠 中国大模型精通
-- ✅ **深度理解**各大中国AI模型的特性和优势
-- ✅ **灵活切换**多模型架构，适配不同业务场景  
-- ✅ **中文优化**掌握中文NLP的最佳实践和调优技巧
-- ✅ **多模态处理**文本、图像、代码的混合应用开发
+### 📈 **进阶级 (Intermediate 4周)** - 技能提升
+**中国大模型实战 + 复杂协作系统**
+- ✅ Week7-8: DeepSeek深度实战 + 智谱GLM科学计算
+- ✅ Week9-10: 多Agent协作 + 复杂推理规划
 
-### 🚀 企业级部署
-- ✅ **Dify平台** - 快速构建企业级AI应用
-- ✅ **RAGFlow方案** - 部署企业级知识库和问答系统
-- ✅ **工作流编排** - 搭建自动化AI业务流程
-- ✅ **容器化部署** - Docker + Kubernetes生产环境
+### 🏭 **高级级 (Advanced 4周)** - 企业级应用
+**AI工作流集成 + 生产环境部署**
+- ✅ Week11-12: Dify低代码 + RAGFlow企业RAG
+- ✅ Week13-14: API架构 + Docker/K8s部署
 
-### 🎯 DevOps实战
-- ✅ **高可用架构** - 多模型故障转移和负载均衡
-- ✅ **监控运维** - 实时监控、日志收集、性能优化
-- ✅ **API网关** - 统一的RESTful API服务层
-- ✅ **CI/CD流程** - 自动化构建、测试、部署
+### 🏆 **专家级 (Specialization)** - 行业定制
+**按场景的纵深学习 + 企业专项训练**
+
+---
+
+## 🏗️ 项目结构导航
+
+### 📘 **基础学习架构** （保留1.0设计精华）
+
+```
+📁 /examples/
+├── 01_foundation/                   # 🔰 基础学习模块（6周）
+│   ├── 01_environment_setup/        # Week 1: 环境+架构入门
+│   ├── 02_prompts_and_chains/       # Week 2: Prompt工程+链式思维
+│   ├── 03_basic_agents/            # Week 3: Agents概念和工具集成
+│   ├── 04_dialogue_agents/         # Week 4: 智能对话+角色塑造
+│   ├── 05_basic_rag/               # Week 5: RAG系统+向量数据库
+│   └── 06_advanced_rag/            # Week 6: RAG高级技巧+优化
+├── 02_intermediate/                 # 📊 进阶学习模块（4周）
+│   ├── 07_deepseek_mastery/        # 深度求索长文本+代码能力
+│   ├── 08_zhipu_scientific/        # 智谱GLM数学+科研计算
+│   ├── 09_multi_agent_coordination/
+│   └── 10_complex_reasoning/       # 复杂推理+任务规划
+└── 03_advanced/                     # 🚀 高级学习模块（4周）
+    ├── 11_dify_applications/       # Dify低代码AI应用
+    ├── 12_ragflow_entreprise/      # RAGFlow企业级RAG
+    ├── 13_api_architecture/        # 服务器API架构设计
+    └── 14_production_deployment/   # Docker+K8s生产部署
+
+📁 /configs/                          # 🔧 统一配置管理
+├── foundation/                     # 基础级配置
+├── intermediate/                   # 进阶级配置  
+└── advanced/                       # 高级级配置
+
+📁 /docs/                             # 📖 学习文档
+├── foundation/                     # 🔰 基础课程文档
+├── intermediate/                   # 📊 进阶课程文档
+├── advanced/                       # 🚀 高级课程文档
+└── curriculum/                     # 🎯 完整课程设计
+```
+
+### 🛠️ **基础教学大纲** （LangChain核心理念保留）
+
+**🎯 Week 1-2 模块设计**
+- **01_environment_setup**: 保留原始环境搭建和第一链条
+- **02_prompts_and_chains**: Prompt工程+多链组合（翻译器项目）
+
+**🎯 Week 3-4 Agent模块**
+- **03_basic_agents**: 内置工具+自定义工具（科研助手）  
+- **04_dialogue_agents**: 对话记忆+角色塑造（个性化AI助手）
+
+**🎯 Week 5-6 RAG模块** 
+- **05_basic_rag**: 向量数据库基础（Chroma/Pinecone）+ 问答系统
+- **06_advanced_rag**: 多路检索+中文优化（客服FAQ系统）
 
 ## 📊 新改进亮点
 
