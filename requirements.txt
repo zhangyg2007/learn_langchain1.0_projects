@@ -1,0 +1,44 @@
+# Core LangChain packages
+langchain==0.1.0
+langchain-community==0.0.10
+langchain-openai==0.0.2
+
+# LLM providers
+openai>=1.0.0
+google-generativeai
+ollama
+
+# Vector stores and databases
+chromadb>=0.4.0
+faiss-cpu
+pinecone-client
+
+# Document processing
+pypdf
+python-docx
+beautifulsoup4
+selenium
+
+# Web frameworks
+fastapi
+flask
+streamlit
+
+# Development tools
+jupyter
+ipykernel
+python-dotenv
+black
+isort
+flake8
+
+# Additional utilities
+requests
+pydantic
+sqlalchemy
+redis
+
+# Optional: For advanced features
+langgraph
+langserve
+tiktoken
