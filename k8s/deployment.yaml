@@ -1,0 +1,191 @@
+# Kubernetes部署配置 - Enterprise Chinese AI Models Deployment
+# 基于生产级设计，支持中国主流大模型和AI工作流
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langchain-chinese-models
+  namespace: langchain
+  labels:
+    app: langchain-app
+    version: v2.0.0
+    component: chinese-models
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: langchain-app
+      component: chinese-models
+  template:
+    metadata:
+      labels:
+        app: langchain-app
+  version: v2.0.0
+        component: chinese-models
+    spec:
+ securityContext:
+        runAsNonRoot: true
+runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+   containers:
+   - name: langchain-app
+      image: ghcr.io/zhangyg2007/learn_langchain1.0_projects:latest
+      ports:
+       - containerPort: 8000
+      protocol: TCP
+        env:
+      # 🎯 中国主流AI模型配置 - 可根据环境变量覆盖
+      - name: DEFAULT_PROVIDER
+      value: "deepseek"
+        - name: DEEPSEEK_API_KEY
+            valueFrom:
+    secretKeyRef:
+         name: langchain-secrets
+  key: deepseek-api-key
+      - name: DEEPSEEK_BASE_URL
+   value: "https://api.deepseek.com/v1"
+     - name: DEEPSEEK_MODEL
+          value: "deepseek-chat"
+  - name: ZHIPU_API_KEY
+      valueFrom:
+              secretKeyRef:
+  name: langchain-secrets
+key: zhipu-api-key
+        - name: ZHIPU_BASE_URL
+      value: "https://open.bigmodel.cn/api/paas/v4"
+        - name: ZHIPU_MODEL
+    value: "glm-4"
+        - name: MOONSHOT_API_KEY
+    valueFrom:
+              secretKeyRef:
+       name: langchain-secrets
+     key: moonshot-api-key
+        - name: MOONSHOT_BASE_URL
+         value: "https://api.moonshot.cn/v1"
+- name: MOONSHOT_MODEL
+          value: "moonshot-v1-8k"
+- name: DASHSCOPE_API_KEY
+     valueFrom:
+              secretKeyRef:
+          name: langchain-secrets
+         key: dashscope-api-key
+     - name: DASHSCOPE_BASE_URL
+        value: "https://dashscope.aliyuncs.com/api/v1"
+      - name: QWEN_MODEL
+            value: "qwen-turbo"
+          
+     # 🌎 国际AI模型配置
+     - name: OPENAI_API_KEY
+       valueFrom:
+     secretKeyRef:
+          name: langchain-secrets
+key: openai-api-key
+   - name: OPENAI_BASE_URL
+          value: "https://api.openai.com/v1"
+        - name: OPENAI_MODEL
+            value: "gpt-3.5-turbo"
+    - name: ANTHROPIC_API_KEY
+     valueFrom:
+            secretKeyRef:
+  name: langchain-secrets
+        key: anthropic-api-key
+        - name: ANTHROPIC_MODEL
+   value: "claude-3-haiku-20240307"
+      - name: GOOGLE_API_KEY
+  valueFrom:
+         secretKeyRef:
+             name: langchain-secrets
+           key: google-api-key
+        - name: GOOGLE_MODEL
+     value: "gemini-pro"
+          
+  # 🔄 AI工作流工具配置
+        - name: DIFY_API_KEY
+          valueFrom:
+   secretKeyRef:
+      name: workflow-secrets
+    key: dify-api-key
+        - name: DIFY_BASE_URL
+            value: "http://dify-service:3000/api/v1"
+- name: RAGFLOW_API_KEY
+            valueFrom:
+              secretKeyRef:
+  name: workflow-secrets
+     key: ragflow-api-key
+    - name: RAGFLOW_BASE_URL
+          value: "http://ragflow-service:9380/api/v1"
+        - name: LANGFLOW_API_KEY
+    valueFrom:
+              secretKeyRef:
+             name: workflow-secrets
+key: langflow-api-key
+    - name: FLOWISE_API_KEY
+valueFrom:
+       secretKeyRef:
+           name: workflow-secrets
+             key: flowise-api-key
+  - name: N8N_WEBHOOK_URL
+  value: "http://n8n-service:5678/webhook"
+    - name: N8N_AUTH_TOKEN
+ valueFrom:
+   secretKeyRef:
+       name: workflow-secrets
+     key: n8n-auth-token
+          
+    # 📊 数据库和缓存配置
+        - name: REDIS_URL
+          value: "redis://redis-service:6379/0"
+- name: DB_HOST
+     value: "postgres-service"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "langchain_db"
+        - name: DB_USER
+          value: "langchain"
+- name: DB_PASSWORD
+    valueFrom:
+              secretKeyRef:
+         name: database-secrets
+       key: db-password
+          
+        # 📋 应用配置
+   - name: DEBUG
+          value: "false"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: MAX_RETRIES
+     value: "3"
+        - name: REQUEST_TIMEOUT
+      value: "60"
+  - name: RATE_LIMIT_DELAY
+            value: "1.0"
+        \n    # 🔍 监控和健康检查配置
+- name: METRICS_PORT
+      value: "8001"
+     - name: HEALTH_CHECK_PORT
+   value: "8002"
+         value: "0.1,0.3,0.5,0.7,0.9,1.0"
+        \n        # 🔐 安全设置
+        - name: SECRET_KEY
+          valueFrom:
+       secretKeyRef:
+     name: security-secrets
+          key: secret-key
+- name: JWT_SECRET\n            valueFrom:\n      secretKeyRef:\n name: security-secrets\n        key: jwt-secret\n    \n     resources:\n        requests:\n     memory: \"512Mi\"\n          cpu: \"250m\"\n        limits:\n     memory: \"2Gi\"\n          cpu: \"1000m\"\n      \nvolumeMounts:\n        - name: app-config\n     mountPath: /app/config\n        readOnly: true\n      - name: app-data\n   mountPath: /app/data\n          - name: app-logs\n    mountPath: /app/logs\n          \nlivenessProbe:\n       httpGet:\n path: /health/live\n  port: 8000\n        initialDelaySeconds: 30\n    periodSeconds: 10\n timeoutSeconds: 5\n      failureThreshold: 3\n        \n      readinessProbe:\n      httpGet:\n        path: /health/ready\n port: 8000\n          initialDelaySeconds: 5\n        periodSeconds: 5\n        timeoutSeconds: 3\n        failureThreshold: 3\n        \n        startupProbe:\n   httpGet:\n            path: /health/startup\n            port: 8000\n      initialDelaySeconds: 10\n        periodSeconds: 10\n          timeoutSeconds: 5\n   failureThreshold: 5\n  \n      restartPolicy: Always\n    \n  volumes:\n        - name: app-config\n      configMap:\n            name: langchain-config\n        - name: app-data\n    persistentVolumeClaim:\n  claimName: langchain-data-pvc\n        - name: app-logs
+ persistentVolumeClaim:\n      claimName: langchain-logs-pvc\n      
+      imagePullSecrets:
+        - name: github-container-registry\n---\napiVersion: v1\nkind: Service\nmetadata:
+  name: langchain-service
+  namespace: langchain
+  labels:
+    app: langchain-app
+spec:
+  selector:
+    app: langchain-app\n    component: chinese-models
+  ports:\n    - name: http\n      protocol: TCP\n      port: 8000\n      targetPort: 8000\n    - name: metrics\n      protocol: TCP\n  port: 8001\n    targetPort: 8001\n    - name: health\nprotocol: TCP\n    port: 8002\n      targetPort: 8002\n  type: ClusterIP\n\n---\n# Horizontal Pod Autoscaler - 自动扩缩容
+apiVersion: autoscaling/v2\nkind: HorizontalPodAutoscaler\nmetadata:\n  name: langchain-hpa\n  namespace: langchain\nspec:\n  scaleTargetRef:\n    apiVersion: apps/v1\n    kind: Deployment\n    name: langchain-chinese-models\n  minReplicas: 2\n  maxReplicas: 10\n  metrics:\n  - type: Resource\n    resource:\n  name: cpu\n   target:\n  type: Utilization\n    averageUtilization: 70\n  - type: Resource\n   resource:\n   name: memory\n target:\n        type: Utilization\n        averageUtilization: 80\n  behavior:\n    scaleUp:\n  stabilizationWindowSeconds: 60\n   policies:\n      - type: Percent\n   value: 50\n    periodSeconds: 60\n    scaleDown:\n  stabilizationWindowSeconds: 300\n      policies:\n        - type: Percent\n    value: 10\n    periodSeconds: 60\n\n---\n# Network Policy - 网络安全策略
+apiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: langchain-network-policy\n  namespace: langchain\nspec:\n  podSelector:\nmatchLabels:\n app: langchain-app\n  policyTypes:\n  - Ingress\n  - Egress\n  ingress:\n  - from:\n    - namespaceSelector:\n       matchLabels:\n      name: ingress-system\n    - namespaceSelector:\n    matchLabels:\n   name: monitoring\n    ports:\n    - protocol: TCP\n      port: 8000\n    - protocol: TCP\n port: 8001\n    - protocol: TCP\n      port: 8002\n  egress:\n  - to: []\n    ports:\n    # 允许访问外部API（模型提供商）\n    - protocol: TCP\n port: 443  # HTTPS\n    - protocol: TCP\n      port: 80   # HTTP\n    # 允许访问内部服务\n    - protocol: TCP\n  port: 5432  # PostgreSQL\n    - protocol: TCP\n      port: 6379  # Redis\n    - protocol: TCP\n      port: 3000  # Dify\n    - protocol: TCP\n      port: 9380  # RAGFlow\n\n---\n# ConfigMap - 应用配置\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: langchain-config\n  namespace: langchain\ndata:\n  config.yaml: |\n    # 应用配置\n    app:\n  name: \“LangChain中国AI模型集成\”\n      version: \"2.0.0\"\n      debug: false\n      log_level: \"INFO\"\n\n    # 模型配置\n      models:\n    default_provider: \"deepseek\"\n        chinese_providers: [\"deepseek\", \"zhipu\", \"moonshot\", \"dashscope\", \"baichuan\"]\n        international_providers: [\"openai\", \"anthropic\", \"google\", \"azure\"]\n \n    # 工作流配置\n    workflows:\n  dify:\n   base_url: \"http://dify-service:3000/api/v1\"\n        ragflow:\nbase_url: \"http://ragflow-service:9380/api/v1\"\n        enabled_exporters: [\"metrics\", \"traces\", \"logs\"]\n      \n    # 监控配置\n        monitoring:\n        enabled: true\n        metrics_port: 8001\n health_check_port: 8002\n prometheus_endpoint: \"/metrics\"\n       health_endpoint: \"/health\"\n      \n    # 故障转移配置\n    failover:\n     enabled: true\n    fallback_chain: [\"deepseek\", \"zhipu\", \"moonshot\", \"openai\"]\n    retry_attempts: 3\n        timeout_seconds: 30\n      \n    # 安全配置\n    security:\n        rate_limiting:\n            enabled: true\n    requests_per_minute: 60\n        authentication:\n enabled: true\n       token_expiry_hours: 24\n\n---\n# PVC - 数据持久化\napiVersion: v1
+kind: PersistentVolumeClaim\nmetadata:\n  name: langchain-data-pvc\n  namespace: langchain\nspec:\n  accessModes:\n    - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n  storageClassName: fast-ssd\n\n---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: langchain-logs-pvc\n  namespace: langchain\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n   storage: 5Gi\n  storageClassName: standard\n\n---\n# Secrets - 敏感配置\napiVersion: v1\nkind: Secret\nmetadata:\n  name: langchain-secrets\n  namespace: langchain\ntype: Opaque\ndata:\n  # Base64编码的API密钥 - 需要使用实际的密钥\n  # echo -n \"your-api-key\" | base64\n  deepseek-api-key: <base64-encoded-api-key>\n  zhipu-api-key: <base64-encoded-api-key>\nzhipu-api-key: <base64-encoded-api-key>\n  moonshot-api-key: <base64-encoded-api-key>\n  openai-api-key: <base64-encoded-api-key>\n  anthropic-api-key: <base64-encoded-api-key>\n  google-api-key: <base64-encoded-api-key>\n  dashscope-api-key: <base64-encoded-api-key>\n  baichuan-api-key: <base64-encoded-api-key>\n\n---\napiVersion: v1\nkind: Secret\nmetadata:\n  name: workflow-secrets\n  namespace: langchain\ntype: Opaque\ndata:\n  dify-api-key: <base64-encoded-api-key>\n  ragflow-api-key: <base64-encoded-api-key>\n  langflow-api-key: <base64-encoded-api-key>\n  flowise-api-key: <base64-encoded-api-key>\n  n8n-auth-token: <base64-encoded-api-key>\n\n---\napiVersion: v1\nkind: Secret\nmetadata:\n  name: database-secrets\n  namespace: langchain\ntype: Opaque\ndata:\n  db-password: <base64-encoded-password>\n\n---\napiVersion: v1\nkind: Secret\nmetadata:\n  name: security-secrets\n  namespace: langchain\ntype: Opaque\ndata:\n  secret-key: <base64-encoded-secret-key>\n  jwt-secret: <base64-encoded-jwt-secret>\n\n---\n# Namespace - 命名空间\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: langchain\n  labels:\n    name: langchain\n  annotations:\n    description: \"LangChain 1.0 Chinese AI Models Integration\"\n    version: \"2.0.0\"\n\n---\n# ServiceAccount - 服务账户\napiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: langchain-service-account\n  namespace: langchain
+  labels:\n    app: langchain-app\nautomountServiceAccountToken: true\n\n---\n# RBAC - 权限配置\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nmetadata:\n  name: langchain-role\n  namespace: langchain\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\", \"services\", \"endpoints\", \"configmaps\"]\n  verbs: [\"get\", \"list\", \"watch\"]\n- apiGroups: [\"apps\"]\n  resources: [\"deployments\", \"replicasets\"]\n  verbs: ['get', 'list', 'watch']\n\n---\napiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata:\n  name: langchain-rolebinding\n  namespace: langchain\nroleRef:\n  apiGroup: rbac.authorization.k8s.io\n  kind: Role\n  name: langchain-role\nsubjects:\n- kind: ServiceAccount\n  name: langchain-service-account\n  namespace: langchain

@@ -1,0 +1,34 @@
+# L1 Foundation课程依赖 - Week 1
+# LangChain 1.0 基础学习依赖
+
+# 🔧 基础LangChain依赖
+langchain==0.1.0
+langchain-openai==0.0.5
+langchain-core==0.1.0
+
+# 🐍 Python环境依赖
+python-dotenv==1.0.0
+jinja2==3.1.2
+typing-extensions==4.8.0
+
+# 📊 数据处理与验证
+pydantic==2.5.0
+requests==2.31.0
+
+# 🧪 测试与开发
+dataclasses==0.6
+asyncio==3.4.3
+
+# China AI Models Support (可选)
+# deepseek-api>=0.3.0
+# zhipuai>=2.0.0
+# moonshot>=1.0
+
+# 📚 学习工具
+jupyter==1.0.0
+jupyterlab-extensions==3.2.0
+
+# 📝 开发辅助工具
+black==23.11.0
+isort==5.12.0
+mypy==1.7.0

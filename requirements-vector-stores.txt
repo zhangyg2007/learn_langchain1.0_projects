@@ -1,0 +1,52 @@
+# 向量数据库优化配置
+# Chinese-Optimized Vector Database Dependencies  
+# Based on CLAUDE.md specification
+
+# 星环Milvus - 中国优化向量数据库
+# StarHub Milvus - China-optimized vector database
+milvus-client>=2.3.0
+langchain-milvus>=0.1.0
+
+# Qdrant高性能向量数据库
+# Qdrant High-Performance Vector Database
+qdrant-client>=1.7.0
+langchain-qdrant>=0.1.0
+
+# Weaviate支持中文
+# Weaviate with Chinese Support
+weaviate-client>=3.25.0
+langchain-weaviate>=0.0.3
+
+# ChromaDB中文支持版
+# ChromaDB Chinese Support Edition
+chroma-client>=0.4.0
+langchain-chroma>=0.1.0
+
+# PostgreSQL向量插件
+# PostgreSQL Vector Plugin
+pgvector>=0.2.0
+psycopg2-binary>=2.9.0
+
+# Facebook FAISS - 高性能向量搜索
+# Facebook FAISS - High-Performance Vector Search
+faiss-cpu>=1.7.0
+faiss-gpu>=1.7.0  # Optional GPU support
+
+# Pinecone云向量数据库
+# Pinecone Cloud Vector Database
+pinecone-client>=2.2.0
+langchain-pinecone>=0.1.0
+
+# KDB.AI时序向量数据库
+# KDB.AI Time-Series Vector Database
+kdbai>=1.0
+
+# 向量处理工具
+# Vector Processing Tools
+sentence-transformers>=2.2.0
+numpy>=1.24.0
+
+# 中文文本处理优化
+# Chinese Text Processing Optimization
+jieba>=0.42.1  # 中文分词
+langdetect>=1.0.9  # 语言检测

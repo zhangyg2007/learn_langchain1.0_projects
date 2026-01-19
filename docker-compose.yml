@@ -1,0 +1,301 @@
+version: '3.8'
+
+services:
+  # 主应用服务 - LangChain Chinese Models Application
+  langchain-app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEFAULT_PROVIDER=deepseek
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - ZHIPU_API_KEY=${ZHIPU_API_KEY}
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DIFY_API_KEY=${DIFY_API_KEY}
+      - DIFY_BASE_URL=http://dify:3000/api/v1
+      - RAGFLOW_API_KEY=${RAGFLOW_API_KEY}
+      - RAGFLOW_BASE_URL=http://ragflow:9380/api/v1
+      - REDIS_URL=redis://redis:6379
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=langchain_db
+      - DB_USER=langchain
+      - DB_PASSWORD=langchain_password
+    depends_on:
+      - ragflow
+      - milvus
+      - redis
+      - postgres
+    volumes:
+      - ./app:/app
+      - ./logs:/app/logs
+      - ./data:/app/data
+    command: python -m app.main
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Dify工作流平台
+  dify:
+    image: langgenius/dify:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - EDITION=SELF_HOSTED
+      - DB_DATABASE=dify
+      - DB_PASSWORD=dify_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - dify_data:/app/api/storage
+    restart: unless-stopped
+    profiles:
+      - dify
+
+  # RAGFlow企业级RAG平台
+  ragflow:
+    image: infiniflow/ragflow:v1.0
+    ports:
+      - "9380:9380"
+    environment:
+      - RAGFLOW_DB_HOST=postgres
+      - RAGFLOW_DB_PORT=5432
+      - RAGFLOW_DB_NAME=ragflow_db
+      - RAGFLOW_DB_USER=ragflow
+      - RAGFLOW_DB_PASSWORD=ragflow_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+  - ragflow_data:/app/data
+    - ./ragflow-config:/app/config
+    restart: unless-stopped
+    profiles:
+      - ragflow
+
+  # Milvus向量数据库（中国优化版本）
+  milvus:
+    image: milvusdb/milvus:v2.3-cpu-latest
+    ports:
+      - "19530:19530"
+    environment:
+      - ETCD_ENDPOINTS=etcd:2379
+      - MINIO_ADDRESS=minio:9000
+    depends_on:
+      - etcd
+      - minio
+    volumes:
+      - milvus_data:/var/lib/milvus
+    restart: unless-stopped
+    profiles:
+      - vector-db
+
+  # Qdrant向量数据库（高性能版本）
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  # Chroma向量数据库（轻量级）
+  chroma:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    restart: unless-stopped
+    profiles:
+      - vector-db
+
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=langchain_db
+      - POSTGRES_USER=langchain
+      - POSTGRES_PASSWORD=langchain_password
+    volumes:
+ - postgres_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langchain"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB（可选数据存储）
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin_password
+      - MONGO_INITDB_DATABASE=langchain_data
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    profiles:
+      - nosql
+
+  # Redis缓存和会话管理
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # N8N工作流引擎
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+    - N8N_BASIC_AUTH_PASSWORD=n8n_password
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+    - DB_POSTGRESDB_DATABASE=langchain_db
+      - DB_POSTGRESDB_USER=langchain
+      - DB_POSTGRESDB_PASSWORD=langchain_password
+    depends_on:
+   - postgres
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+    profiles:
+      - workflow
+
+ # LangFlow可视化工作流
+  langflow:
+    image: logspace/langflow:latest
+    ports:
+      - "7860:7860"
+    environment:
+      - LANGFLOW_DATABASE_URL=postgresql://langchain:langchain_password@postgres:5432/langchain_db
+      - LANGFLOW_BACKEND_ONLY=false
+    volumes:
+      - langflow_data:/root/.cache/langflow
+    restart: unless-stopped
+    profiles:
+      - workflow
+
+  # Prometheus监控系统（可选）
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus-config:/etc/prometheus
+  - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    profiles:
+  - monitoring
+
+  # Grafana可视化监控
+  grafana:
+  image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # 高性能代理服务器
+  nginx:
+ image: nginx:alpine
+    ports:
+   - "80:80"
+      - "443:443"
+    volumes:
+  - ./nginx-config:/etc/nginx/conf.d
+      - ./ssl-certs:/etc/nginx/ssl
+    depends_on:
+   - langchain-app
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # Milvus依赖服务
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.0
+    ports:
+      - "2379:2379"
+    environment:
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+  - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+    restart: unless-stopped
+    profiles:
+      - vector-db
+
+  minio:
+    image: minio/minio:latest
+    ports:
+   - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    profiles:
+      - vector-db
+
+# 卷定义
+volumes:
+  postgres_data:
+  mysql_data:
+  redis_data:
+  milvus_data:
+  qdrant_data:
+  chroma_data:
+  ragflow_data:
+  prometheus_data:
+  grafana_data:
+  minio_data:
+  n8n_data:
+  langflow_data:
+  dify_data:
+
+# 网络配置
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

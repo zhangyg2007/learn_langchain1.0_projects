@@ -1,0 +1,370 @@
+#!/usr/bin/env python3
+"""
+LangChain 1.0 高阶示例: FastAPI + Agent 企业级应用
+课程名称: L3 Advanced - 企业级智能体API
+"""
+
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi.responses import StreamingResponse
+from fastapi.security import APIKeyHeader
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, AsyncGenerator
+import asyncio
+import json
+from datetime import datetime
+import logging
+from uuid import uuid4
+import time
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# 🚀 FastAPI 应用初始化
+app = FastAPI(
+    title="LangChain中国智能体API",
+    description="企业级LangChain 1.0智能体应用平台",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# 🔑 API安全配置
+API_KEY_HEADER = APIKeyHeader(name="X-API-Key")
+API_KEYS = {
+    "demo_key_001": {"user": "demo_user", "rate_limit": 100},
+    "ent_key_002": {"user": "enterprise_user", "rate_limit": 1000}
+}
+
+# 💾 全局状态管理
+class GlobalState:
+    def __init__(self):
+        self.active_sessions: Dict[str, dict] = {}
+        self.session_history: Dict[str, List] = {}
+        self.performance_metrics = {
+            "total_requests": 0,
+            "successful_requests": 0,
+            "failed_requests": 0,
+            "avg_response_time": 0
+        }
+
+app_state = GlobalState()
+
+# 📋 Pydantic数据模型
+class ChatRequest(BaseModel):
+    message: str = Field(..., description="用户输入的消息", min_length=1, max_length=1000)
+    session_id: Optional[str] = Field(None, description="会话ID，用于维持上下文")
+    context: Optional[dict] = Field(None, description="额外的上下文信息")
+    model_name: str = Field("glm-4", description="使用的模型名称")
+    temperature: float = Field(0.7, description="模型温度参数", ge=0.0, le=2.0)
+    max_tokens: int = Field(1000, description="最大输出token数", ge=1, le=4096)
+
+class ChatResponse(BaseModel):
+    success: bool
+    data: dict
+    session_id: str
+    timestamp: datetime
+    metadata: dict
+
+class AgentSession(BaseModel):
+    session_id: str
+    user_id: str
+    created_at: datetime
+    last_activity: datetime
+    status: str
+    context: dict
+
+class PerformanceMetrics(BaseModel):
+    total_requests: int
+    successful_requests: int
+    failed_requests: int
+    avg_response_time: float
+    active_sessions: int
+
+# 🔐 验证函数
+def verify_api_key(api_key: str = Depends(API_KEY_HEADER)):
+    """验证API密钥"""
+    if api_key not in API_KEYS:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
+    return API_KEYS[api_key]
+
+# 🧠智能体核心类
+class EnterpriseAgent:
+    """企业级智能体核心类"""
+    
+    def __init__(self, agent_id: str):
+        self.agent_id = agent_id
+        self.capabilities = [
+            "中文问答", "数据分析", "代码生成", 
+            "文档总结", "翻译服务", "商业建议"
+        ]
+        self.memory = {}
+        self.session_context = {}
+    
+    async def process_message(self, message: str, context: dict) -> dict:
+        """处理输入消息"""
+        
+        # 模拟智能处理逻辑
+        if "计算" in message or "math" in message.lower():
+            return {
+                "type": "calculation",
+                "content": await self._handle_calculation(message),
+                "tools_used": ["数学计算器"]
+            }
+        elif "翻译" in message or "translate" in message.lower():
+            return {
+                "type": "translation", 
+                "content": await self._handle_translation(message),
+                "tools_used": ["翻译服务"]
+            }
+        elif "代码" in message or "code" in message.lower():
+            return {
+                "type": "code_generation",
+                "content": await self._handle_code_generation(message),
+                "tools_used": ["代码生成器"]
+            }
+        else:
+            return {
+                "type": "general_chat",
+                "content": await self._handle_general_chat(message),
+                "tools_used": ["对话引擎"]
+            }
+    
+    async def _handle_calculation(self, message: str) -> str:
+        """处理数学计算"""
+        await asyncio.sleep(0.1)  # 模拟处理时间
+        return f"📊 数学计算结果: 已处理复杂计算逻辑，具体结果={hash(message) % 100}"
+    
+    async def _handle_translation(self, message: str) -> str:
+        """处理翻译请求"""
+        await asyncio.sleep(0.2)
+        return "🌐 翻译服务: 英文翻译 - > 'This is a sample translation'"
+    
+    async def _handle_code_generation(self, message: str) -> str:
+        """处理代码生成"""
+        await asyncio.sleep(0.3)
+        code_sample = """
+def hello_world():
+    print("Hello, LangChain Enterprise!")
+    return {"status": "success", "message": "Generated by Enterprise Agent"}
+        """
+        return f"🧑‍💻 代码生成完成:\n```python\n{code_sample}\n```"
+    
+    async def _handle_general_chat(self, message: str) -> str:
+        """处理通用对话"""
+        await asyncio.sleep(0.1)
+        return f"🤖 企业智能体回应: 感谢您的咨询 '{message}'。我是您的专属智能助手，请告诉我您需要哪方面的帮助。"
+    
+    def get_capability_summary(self) -> dict:
+        """获取能力摘要"""
+        return {
+            "agent_id": self.agent_id,
+            "capabilities": self.capabilities,
+            "status": "active",
+            "memory_size": len(self.memory)
+        }
+
+# 🌐 FastAPI端点实现
+
+@app.on_event("startup")
+async def startup_event():
+    """应用启动事件"""
+    logger.info("LangChain企业级智能体API服务启动")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """应用关闭事件"""
+    logger.info("LangChain企业级智能体API服务关闭")
+
+# 🏠 基础端点
+@app.get("/")
+async def root():
+    """根端点"""
+    return {
+        "message": "欢迎使用LangChain中国智能体API",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
+@app.get("/health", response_model=dict)
+async def health_check():
+    """健康检查端点"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(),
+        "service": "LangChain Enterprise Agent API",
+        "uptime": time.time()  # 简化版正常运行时间
+    }
+
+# 🧠 智能体管理端点
+@app.post("/agent/create", response_model=AgentSession)
+async def create_agent_session(
+    background_tasks: BackgroundTasks,
+    user_role: dict = Depends(verify_api_key)
+):
+    """创建新的智能体会话"""
+    session_id = str(uuid4())
+    agent = EnterpriseAgent(session_id)
+    
+    app_state.active_sessions[session_id] = {
+        "agent": agent,
+        "created_at": datetime.now(),
+        "user": user_role["user"]
+    }
+    
+    background_tasks.add_task(log_session_creation, session_id, user_role["user"])
+    
+    return AgentSession(
+        session_id=session_id,
+        user_id=user_role["user"],
+        created_at=datetime.now(),
+        last_activity=datetime.now(),
+        status="active",
+        context={}
+    )
+
+# 💬 核心聊天端点
+@app.post("/chat/message", response_model=ChatResponse)
+async def process_chat_message(
+    request: ChatRequest,
+    background_tasks: BackgroundTasks,
+    user_role: dict = Depends(verify_api_key)
+):
+    """处理聊天消息 - 核心端点"""
+    
+    start_time = time.time()
+    session_id = request.session_id or str(uuid4())
+    
+    try:
+        # 获取或创建智能体session
+        if session_id in app_state.active_sessions:
+            agent = app_state.active_sessions[session_id]["agent"]
+        else:
+            agent = EnterpriseAgent(session_id)
+            app_state.active_sessions[session_id] = {
+                "agent": agent,
+                "created_at": datetime.now(),
+                "user": user_role["user"]
+            }
+        
+        # 调用智能体处理消息
+        agent_response = await agent.process_message(
+            message=request.message,
+            context=request.context or {}
+        )
+        
+        # 构建响应
+        response_data = {
+            "user_message": request.message,
+            "agent_response": agent_response["content"],
+            "processing_type": agent_response["type"],
+            "tools_used": agent_response["tools_used"],
+            "response_time": time.time() - start_time
+        }
+        
+        # 更新性能指标
+        app_state.performance_metrics["total_requests"] += 1
+        app_state.performance_metrics["successful_requests"] += 1
+        
+        background_tasks.add_task(
+            log_chat_interaction, 
+            session_id, request.message, response_data
+        )
+        
+        return ChatResponse(
+            success=True,
+            data=response_data,
+            session_id=session_id,
+            timestamp=datetime.now(),
+            metadata={
+                "model_used": request.model_name,
+                "response_time": time.time() - start_time
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error processing chat message: {str(e)}")
+        app_state.performance_metrics["failed_requests"] += 1
+        
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Intelligent processing failed: {str(e)}"
+        )
+
+# 📊 流式响应端点
+@app.post("/chat/stream")
+async def process_chat_stream(
+    request: ChatRequest,
+    user_role: dict = Depends(verify_api_key)
+):
+    """流式处理聊天消息"""
+    
+    async def generate_stream() -> AsyncGenerator[str, None]:
+        """生成流式响应"""
+        # 分段逐步输出
+        response_chunks = [
+            f"data: {json.dumps({'status': 'initialized', 'session_id': str(uuid4())})}\n\n",
+            f"data: {json.dumps({'status': 'processing', 'message': '正在分析中...'})}\n\n",
+            f"data: {json.dumps({'status': 'thinking', 'message': '思考解决方案中...'})}\n\n",
+            f"data: {json.dumps({'status': 'responding', 'content': '这是流式响应的第一部分'})}\n\n",
+            f"data: {json.dumps({'status': 'responding', 'content': '这是流式响应的第二部分'})}\n\n",
+            f"data: {json.dumps({'status': 'completed', 'content': '流式响应完成！'})}\n\n",
+            "data: [DONE]\n\n"
+        ]
+        
+        for chunk in response_chunks:
+            yield chunk
+            await asyncio.sleep(0.2)  # 模拟处理时间
+    
+    return StreamingResponse(
+        generate_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
+
+# 📈 系统监控端点  
+@app.get("/metrics", response_model=PerformanceMetrics)
+async def get_performance_metrics(
+    user_role: dict = Depends(verify_api_key)
+):
+    """获取系统性能指标"""
+    
+    metrics = PerformanceMetrics(
+        total_requests=app_state.performance_metrics["total_requests"],
+        successful_requests=app_state.performance_metrics["successful_requests"],
+        failed_requests=app_state.performance_metrics["failed_requests"],
+        avg_response_time=app_state.performance_metrics["avg_response_time"],
+        active_sessions=len(app_state.active_sessions)
+    )
+    
+    return metrics
+
+# 🧰 支持功能
+async def log_session_creation(session_id: str, user: str):
+    """记录会话创建日志"""
+    logger.info(f"Session created - ID: {session_id}, User: {user}")
+
+async def log_chat_interaction(session_id: str, user_message: str, response_data: dict):
+    """记录聊天交互日志"""
+    logger.info(f"Chat interaction - Session: {session_id}, Response time: {response_data.get('response_time', 'unknown')}")
+
+# 🚀 启动配置
+if __name__ == "__main__":
+    import uvicorn
+    
+    uvicorn.run(
+        "fastapi_agent_api:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )
+
+print("\n🚀 企业级智能体API已启动")
+print("Swagger文档: http://localhost:8000/docs")
+print("ReDoc文档: http://localhost:8000/redoc")
+print("健康检查: http://localhost:8000/health")

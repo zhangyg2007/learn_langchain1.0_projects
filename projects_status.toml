@@ -1,0 +1,79 @@
+[project]
+title = "LangChain L3 Advanced 企业级开发课程"
+version = "2.1.0"
+last_updated = "2024-01-17"
+current_user = "zhangyg2007"
+status = "暂停保存，待root权限继续"
+completion_percentage = 65
+
+[completion]
+week_11 = { status = "completed", notes = "企业级FastAPI架构已完成" }
+week_12 = { status = "in_progress", progress = 85, notes = "多平台统一API主功能完成，n8n待优化" }
+week_13 = { status = "pending", notes = "Docker企业部署待开发" }
+week_14 = { status = "pending", notes = "集成测试系统待开发" }
+week_15 = { status = "pending", notes = "专家认证评估待开发" }
+
+[current_task]
+module = "L3_Advanced"
+week = "Week 12"
+file = "04_multi_platform_unified_api_clean.py"
+status = "主要负责人：统一API网关，已完成修复"
+issue = "需要root权限进行完整测试和功能验证"
+todo = [
+  "完整测试04_multi_platform_unified_api_clean.py",
+  "修复03_n8n_workflow_automation.py连接逻辑",
+  "开发Week 13 Docker企业部署",
+  "开发Week 14 集成测试系统",
+  "创建完整认证评估"
+]
+
+[dependencies]
+required_system_packages = ["docker", "redis-server", "postgresql", "miniconda"]
+python_packages = ["httpx", "pydantic", "cachetools", "redis", "postgres"]
+chinese_ai_models = ["deepseek", "zhipu", "moonshot", "qwen", "baichuan"]
+ai_workflow_tools = ["dify", "ragflow", "n8n", "langflow"]
+
+[created_files]
+complete_files = [
+  "courses/L3_Advanced/01_enterprise_fastapi/01_fastapi_enterprise_architecture.py",
+  "courses/L3_Advanced/01_enterprise_fastapi/02_async_rag_service.py", 
+  "courses/L3_Advanced/01_enterprise_fastapi/03_jwt_auth_system.py",
+  "courses/L3_Advanced/02_ai_workflow_integration/01_dify_enterprise_deployment.py",
+  "courses/L3_Advanced/02_ai_workflow_integration/02_ragflow_practice_integration.py",
+  "courses/L3_Advanced/02_ai_workflow_integration/03_n8n_workflow_automation.py",
+  "courses/L3_Advanced/02_ai_workflow_integration/04_multi_platform_unified_api_clean.py"
+]
+
+working_files = [
+  "courses/L3_Advanced/02_ai_workflow_integration/04_multi_platform_unified_api_clean.py"
+]
+
+pending_files = [
+  "courses/L3_Advanced/03_cloud_native_deployment/01_advanced_docker_enterprise.py",
+  "courses/L3_Advanced/03_cloud_native_deployment/02_kubernetes_production_cluster.py",
+  "courses/L3_Advanced/03_cloud_native_deployment/03_helm_charts_management.py",
+  "courses/L3_Advanced/04_production_testing/01_e2e_integration_testing.py",
+  "courses/L3_Advanced/04_production_testing/02_production_environment_setup.py",
+  "courses/L3_Advanced/05_certification/expert_assessment_framework.py"
+]
+
+[technical_features]
+enterprise_patterns = ["工厂模式", "适配器模式", "熔断机制", "限流控制", "缓存策略", "决策引擎"]
+ai_platforms = ["Dify", "RAGFlow", "n8n", "LangFlow", "Flowise"]
+enterprise_integration = ["JWT认证", "多租户", "负载均衡", "故障转移", "监控告警"]
+chinese_optimization = true
+deployment_options = ["Docker", "Kubernetes", "Helm", "Cloud Native"]
+
+[next_steps]
+1 = "使用root权限登录系统"
+2 = "安装miniconda和创建python环境"
+3 = "安装企业级依赖包(httpx, pydantic, cachetools)"
+4 = "测试04_multi_platform_unified_api_clean.py完整功能"
+5 = "修复n8n工作流连接逻辑"
+6 = "开发Week 13+ 其他课程模块"
+
+[notes]
+special_instructions = "需要root权限进行系统级安装和测试"
+chinese_focus = "所有课程都适配中国AI大模型和企业场景"
+enterprise_ready = "设计为生产级部署和企业级应用"
+complexity_level = "专家级，需要系统架构设计经验"

@@ -1,0 +1,36 @@
+# 要求中国主流大模型的包依赖
+# Chinese Mainstream Large Language Model Dependencies
+# Based on CLAUDE.md specification
+
+# 深度求索 DeepSeek
+openai>=1.0.0
+deepseek-api>=0.3.0
+langchain-openai>=0.0.2
+
+# 智谱GLM Zhipu GLM
+zhipuai>=2.0.0
+langchain-glm>=0.1.0
+
+# 月之暗面Kimi Moonshot Kimi
+moonshot>=1.0
+
+# 通义千问 Alibaba Tongyi
+# tongyi>=0.3.0  # Note: Use DashScope instead
+langchain-dashscope>=0.1.0
+dashscope>=1.0
+
+# 百川智能 Baichuan AI
+baichuan>=1.0
+
+# 其他中国模型 Other Chinese Models
+# lingyi>=1.0  # 零一万物 Lingyi AI
+# baai>=1.0    # 北京智源 BAAI
+
+# 核心依赖 Core LangChain Dependencies
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-community>=0.0.10
+
+# 开发工具 Development Tools
+httpx>=0.25.0
+python-dotenv>=0.19.0
